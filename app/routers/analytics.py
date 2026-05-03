@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from ..database import get_db
 from .. import schemas, crud
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, get_current_admin_user
 
 router = APIRouter()
 
@@ -20,7 +20,8 @@ def popular_games(
 
 @router.get("/user-reservations", response_model=dict)
 def user_reservation_stats(
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        current_user = Depends(get_current_admin_user)
 ):
     """Endpoint to show all users reservations history"""
     stats = crud.get_user_reservation_stats(db)
@@ -30,7 +31,8 @@ def user_reservation_stats(
 @router.get("/purchase-suggestions", response_model=list[schemas.PurchaseSuggestion])
 def purchase_suggestions(
         limit: int = 3,
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        current_user = Depends(get_current_admin_user)
 ):
     """Endpoint for suggesting potential most profitable games to buy"""
     return crud.get_purchase_suggestions(db, limit)

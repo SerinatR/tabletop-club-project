@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from .database import engine, Base, get_db
 from .routers import games, reservations, analytics, users
 from . import schemas, crud, auth
+from .dependencies import get_current_admin_user
 
 Base.metadata.create_all(bind=engine)
 
@@ -24,7 +25,11 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/register/admin", response_model=schemas.UserOut)
-def register_admin(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def register_admin(
+        user: schemas.UserCreate,
+        db: Session = Depends(get_db),
+        current_user = Depends(get_current_admin_user)
+):
     """Endpoint for creating new Admin"""
     return crud.create_user(db, user, role='admin')
 
