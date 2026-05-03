@@ -5,13 +5,14 @@ from . import models, schemas
 from .auth import get_password_hash
 
 
-def create_user(db: Session, user: schemas.UserCreate):
+def create_user(db: Session, user: schemas.UserCreate, role: str = "user"):
     hashed = get_password_hash(user.password)
     db_user = models.User(
         username=user.username,
         email=user.email,
         hashed_password=hashed,
-        full_name=user.full_name
+        full_name=user.full_name,
+        role=role
     )
     db.add(db_user)
     db.commit()

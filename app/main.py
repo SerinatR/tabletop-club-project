@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from .database import engine, Base, get_db
 from .routers import games, reservations, analytics
 from . import schemas, crud, auth
+from .dependencies import get_current_admin_user
 
 Base.metadata.create_all(bind=engine)
 
@@ -16,7 +17,13 @@ app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 
 @app.post("/register", response_model=schemas.UserOut)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    return crud.create_user(db, user)
+    return crud.create_user(db, user, role='user')
+
+
+@app.post("/register/admin", response_model=schemas.UserOut)
+def register_admin(user: schemas.UserCreate, db: Session = Depends(get_db),
+                   current_admin = Depends(get_current_admin_user)):
+    return crud.create_user(db, user, role='admin')
 
 
 @app.post("/token", response_model=schemas.Token)

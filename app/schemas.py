@@ -16,6 +16,10 @@ class UserOut(BaseModel):
     username: str
     email: str
     full_name: str
+    role: str
+
+    class Config:
+        from_attributes = True
 
 
 class Token(BaseModel):

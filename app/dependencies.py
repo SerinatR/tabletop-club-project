@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 from .database import get_db
-from . import auth
+from . import auth, models
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -25,3 +25,12 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user is None:
         raise credentials_exception
     return user
+
+
+def get_current_admin_user(current_user=Depends(get_current_user)):
+    if current_user.role != models.Role.ADMIN.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав. Требуется роль администратора."
+        )
+    return current_user

@@ -5,6 +5,11 @@ import enum
 from .database import Base
 
 
+class Role(str, enum.Enum):
+    USER = 'user'
+    ADMIN = 'admin'
+
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -12,6 +17,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     full_name = Column(String)
+    role = Column(String, default=Role.USER.value)
 
     reservations = relationship("Reservation", back_populates="user")
 
