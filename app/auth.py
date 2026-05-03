@@ -3,6 +3,7 @@ from jose import JWTError, jwt
 import bcrypt
 from sqlalchemy.orm import Session
 from . import models, schemas
+from fastapi import HTTPException
 
 SECRET_KEY = "87^A&D*gtdg6TD7gd*T^sa_8GI87@O*SGfagdUS_AIBFIUdof8H(*fu3"
 ALGORITHM = "HS256"
@@ -26,9 +27,15 @@ def get_user(db: Session, username: str):
 def authenticate_user(db: Session, username: str, password: str):
     user = get_user(db, username)
     if not user:
-        return False
+        raise HTTPException(
+            status_code=401,
+            detail="Такого пользователя не существует"
+        )
     if not verify_password(password, user.hashed_password):
-        return False
+        raise HTTPException(
+            status_code=401,
+            detail="Неверный пароль"
+        )
     return user
 
 

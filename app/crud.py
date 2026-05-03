@@ -44,10 +44,14 @@ def create_user(db: Session, user: schemas.UserCreate, role: str = "user"):
 
 def create_game(db: Session, game: schemas.BoardGameCreate):
     db_game = models.BoardGame(**game.dict(), available_quantity=game.total_quantity)
-    db.add(db_game)
-    db.commit()
-    db.refresh(db_game)
-    return db_game
+    try:
+        db.add(db_game)
+        db.commit()
+        db.refresh(db_game)
+        return db_game
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Игра с таким названием уже существует")
 
 
 def get_games(db: Session, skip=0, limit=100):
