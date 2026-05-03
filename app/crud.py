@@ -1,3 +1,6 @@
+"""Module for CRUD operations"""
+# pylint: disable=not-callable
+
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -7,6 +10,7 @@ from .auth import get_password_hash
 
 
 def create_user(db: Session, user: schemas.UserCreate, role: str = "user"):
+    """Creates new user"""
     if db.query(models.User).filter(models.User.username == user.username).first():
         raise HTTPException(
             status_code=400,
@@ -34,35 +38,42 @@ def create_user(db: Session, user: schemas.UserCreate, role: str = "user"):
         db.commit()
         db.refresh(db_user)
         return db_user
-    except IntegrityError:
+    except IntegrityError as exc:
         db.rollback()
         raise HTTPException(
             status_code=400,
             detail="Ошибка при создании пользователя. Возможно, email или username уже заняты."
-        )
+        ) from exc
 
 
 def create_game(db: Session, game: schemas.BoardGameCreate):
+    """Creates new game in database"""
     db_game = models.BoardGame(**game.dict(), available_quantity=game.total_quantity)
     try:
         db.add(db_game)
         db.commit()
         db.refresh(db_game)
         return db_game
-    except IntegrityError:
+    except IntegrityError as exc:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Игра с таким названием уже существует")
+        raise HTTPException(
+            status_code=400,
+            detail="Игра с таким названием уже существует"
+        ) from exc
 
 
 def get_games(db: Session, skip=0, limit=100):
+    """Shows all games in database"""
     return db.query(models.BoardGame).offset(skip).limit(limit).all()
 
 
 def get_game(db: Session, game_name: str):
+    """Shows particular game in database"""
     return db.query(models.BoardGame).filter(models.BoardGame.name == game_name).first()
 
 
 def create_reservation(db: Session, user_id: int, game_name: str):
+    """Reserves copy of a game for user"""
     active = db.query(models.Reservation).filter(
         models.Reservation.user_id == user_id,
         models.Reservation.returned_at.is_(None)
@@ -83,6 +94,7 @@ def create_reservation(db: Session, user_id: int, game_name: str):
 
 
 def return_game(db: Session, reservation_id: int, rating: schemas.RatingCreate = None):
+    """Frees a game from the user"""
     res = db.query(models.Reservation).filter(models.Reservation.id == reservation_id).first()
     if not res or res.returned_at:
         raise HTTPException(400, "Резервация не найдена или уже возвращена.")
@@ -104,6 +116,7 @@ def return_game(db: Session, reservation_id: int, rating: schemas.RatingCreate =
 
 
 def get_popular_games(db: Session, limit=10):
+    """Calculates most demanded games"""
     stats = db.query(
         models.BoardGame.id,
         models.BoardGame.name,
@@ -115,11 +128,13 @@ def get_popular_games(db: Session, limit=10):
      .limit(limit).all()
 
     return \
-        [{"game_id": r[0], "name": r[1], "reservations_count": r[2], "demand_ratio": round(float(r[3]), 2)}
+        [{"game_id": r[0], "name": r[1], "reservations_count": r[2],
+          "demand_ratio": round(float(r[3]), 2)}
             for r in stats]
 
 
 def update_game(db: Session, name: str, game_update: schemas.BoardGameCreate):
+    """Functionality to update existing game"""
     game = db.query(models.BoardGame).filter(models.BoardGame.name == name).first()
     if not game:
         raise HTTPException(404, "Такой игры нет")
@@ -132,6 +147,7 @@ def update_game(db: Session, name: str, game_update: schemas.BoardGameCreate):
 
 
 def delete_game(db: Session, name: str):
+    """Game deletion"""
     game = db.query(models.BoardGame).filter(models.BoardGame.name == name).first()
     if not game:
         raise HTTPException(404, "Такой игры нет")
@@ -141,6 +157,7 @@ def delete_game(db: Session, name: str):
 
 
 def get_user_reservation_stats(db: Session):
+    """Shows games reservation history of the user"""
     stats = db.query(
         models.User.username,
         models.User.full_name,
@@ -174,6 +191,7 @@ def get_user_reservation_stats(db: Session):
 
 
 def get_purchase_suggestions(db: Session, limit: int = 3):
+    """Shows top demanded games for potential buying"""
     suggestions = db.query(
         models.BoardGame.id,
         models.BoardGame.name,
@@ -200,6 +218,7 @@ def get_purchase_suggestions(db: Session, limit: int = 3):
 
 
 def get_user_recommendations(db: Session, user_id: int, limit: int = 5):
+    """Recommends new games to a user"""
     preferred_categories = db.query(models.BoardGame.category)\
         .join(models.Reservation, models.Reservation.game_id == models.BoardGame.id)\
         .filter(models.Reservation.user_id == user_id)\

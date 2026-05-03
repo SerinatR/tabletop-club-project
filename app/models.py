@@ -1,16 +1,20 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum
+"""Module for data models"""
+
+import enum
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-import enum
 from .database import Base
 
 
 class Role(str, enum.Enum):
+    """Users roles"""
     USER = 'user'
     ADMIN = 'admin'
 
 
 class User(Base):
+    """User class"""
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
@@ -23,6 +27,7 @@ class User(Base):
 
 
 class Category(str, enum.Enum):
+    """Game type class"""
     ECONOMIC = "economic"
     WARGAME = "wargame"
     COOP = "coop"
@@ -32,6 +37,7 @@ class Category(str, enum.Enum):
 
 
 class BoardGame(Base):
+    """Class for games"""
     __tablename__ = "boardgames"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
@@ -47,6 +53,7 @@ class BoardGame(Base):
 
 
 class Reservation(Base):
+    """Class for reserving a game"""
     __tablename__ = "reservations"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
@@ -59,6 +66,7 @@ class Reservation(Base):
 
 
 class DurationRating(str, enum.Enum):
+    """Class for possible duration inputs for rating returning game"""
     MIN_15 = "15 min"
     MIN_30 = "30 min"
     MIN_45 = "45 min"
@@ -67,6 +75,7 @@ class DurationRating(str, enum.Enum):
 
 
 class Rating(Base):
+    """Class for game rating"""
     __tablename__ = "ratings"
     id = Column(Integer, primary_key=True, index=True)
     reservation_id = Column(Integer, ForeignKey("reservations.id"), unique=True)
