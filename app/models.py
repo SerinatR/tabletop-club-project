@@ -52,9 +52,17 @@ class Reservation(Base):
     game = relationship("BoardGame", back_populates="reservations")
 
 
+class DurationRating(str, enum.Enum):
+    MIN_15 = "15 min"
+    MIN_30 = "30 min"
+    MIN_45 = "45 min"
+    MIN_60 = "60 min"
+    MORE_60 = "more than 60 min"
+
+
 class Rating(Base):
     __tablename__ = "ratings"
     id = Column(Integer, primary_key=True, index=True)
     reservation_id = Column(Integer, ForeignKey("reservations.id"), unique=True)
-    duration_rating = Column(String)  # 15 min, 30 min, 45 min...
+    duration_rating = Column(SQLEnum(DurationRating))  # 15 min, 30 min, 45 min...
     rules_simplicity = Column(Integer)  # score from 1 to 5

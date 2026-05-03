@@ -1,6 +1,6 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, Field, field_validator, EmailStr
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Literal
 from .models import Category
 
 
@@ -65,8 +65,22 @@ class ReservationOut(BaseModel):
 
 
 class RatingCreate(BaseModel):
-    duration_rating: str  # 15 min, 30 min, 45 min, 60 min, more then 60 min
-    rules_simplicity: int
+    duration_rating: Literal[
+        "15 min",
+        "30 min",
+        "45 min",
+        "60 min",
+        "more than 60 min"
+    ] = Field(..., description="Длительность партии")
+
+    rules_simplicity: int = Field(..., ge=1, le=5, description="Простота правил от 1 до 5")
+
+    @field_validator('rules_simplicity')
+    @classmethod
+    def validate_rules(cls, v: int) -> int:
+        if v < 1 or v > 5:
+            raise ValueError('Простота правил должна быть от 1 до 5')
+        return v
 
 
 class PopularGame(BaseModel):
