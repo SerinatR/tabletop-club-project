@@ -18,9 +18,31 @@ def read_games(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_games(db, skip, limit)
 
 
-@router.get("/{game_id}", response_model=schemas.BoardGameOut)
-def read_game(game_id: int, db: Session = Depends(get_db)):
-    game = crud.get_game(db, game_id)
+@router.get("/{name}", response_model=schemas.BoardGameOut)
+def read_game(
+        name: str,
+        db: Session = Depends(get_db)
+):
+    game = crud.get_game(db, name)
     if not game:
         raise HTTPException(404, "Game not found")
     return game
+
+
+@router.put("/{name}", response_model=schemas.BoardGameOut)
+def update_game(
+        name: str,
+        game_update: schemas.BoardGameCreate,
+        db: Session = Depends(get_db),
+        current_user = Depends(get_current_admin_user)
+):
+    return crud.update_game(db, name, game_update)
+
+
+@router.delete("/{name}")
+def delete_game(
+        name: str,
+        db: Session = Depends(get_db),
+        current_user = Depends(get_current_admin_user)
+):
+    return crud.delete_game(db, name)

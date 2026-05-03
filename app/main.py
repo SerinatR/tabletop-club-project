@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from .database import engine, Base, get_db
-from .routers import games, reservations, analytics
+from .routers import games, reservations, analytics, users
 from . import schemas, crud, auth
 from .dependencies import get_current_admin_user
 
@@ -13,6 +13,7 @@ app = FastAPI(title="Board Game Club API")
 app.include_router(games.router, prefix="/games", tags=["games"])
 app.include_router(reservations.router, prefix="/reservations", tags=["reservations"])
 app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
+app.include_router(users.router, prefix="/users", tags=["users"])
 
 
 @app.post("/register", response_model=schemas.UserOut)

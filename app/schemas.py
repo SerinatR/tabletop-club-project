@@ -53,8 +53,12 @@ class BoardGameOut(BoardGameBase):
         from_attributes = True
 
 
+class GameActionByName(BaseModel):
+    name: str
+
+
 class ReservationCreate(BaseModel):
-    game_id: int
+    game_name: str
 
 
 class ReservationOut(BaseModel):
