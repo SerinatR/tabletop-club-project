@@ -14,17 +14,24 @@ REST API для управления клубом настольных игр
 ## Технологии
 
 – Fast API
+
 – SQLAlchemy 2.0
+
 – JWT
+
 – Pydantic v2
+
 – TestClient (pytest)
 
 ### 1. Клонирование проекта
 
 ```bash```
 cd F:\tabletopGameFastAPI
+
 python -m venv venv
+
 venv\Scripts\activate
+
 pip install -r requirements.txt
 
 ### 2. Создание первого администратора
@@ -36,6 +43,7 @@ python create_admin.py
 uvicorn app.main:app --reload
 
 Документация будет доступна по ссылке:
+
 Swagger UI: http://127.0.0.1:8000/docs
 
 ## Основные Endpoints
@@ -43,63 +51,93 @@ Swagger UI: http://127.0.0.1:8000/docs
 ### 1. Авторизация
 
 – POST /register – регистрация нового посетителя
+
 – POST /register/admin – регистрация нового администратора (только для админа)
+
 – POST /token – получение JWT-токена
 
 ### 2. Управление базой игр
 
 – POST /games/ – добавление новой игры администратором
+
 – GET /games/ – список игр клуба
+
 – GET /games/{name} – информация об игре в клубе
+
 – PUT /games/{name} – изменение информации об игре в клубе (для админа)
+
 – DELETE /games/{name} – удаление игры из базы клуба (для админа)
 
 ### 3. Резервация игр пользователями
 
 – POST /reservations/ – резервация игры пользователем
+
 – POST /reservations/return – возвращение игры пользователем с возможностью оценки
 
 ### 4. Аналитика
 
 – GET /analytics/popular-games – получение информации о популярных играх в клубе
+
 – GET /analytics/user-reservations – просмотр истории игр всех посетителей
+
 – GET /analytics/purchase-suggestions – определение игр, закупка дополнительных копий которых может быть выгодно для клуба
+
 – GET /analytics/recommendations – рекомендации новых игр для пользователя на основе его истории игр
 
 ### 5. Информация о пользователе
 
 – GET /users/users/me – получение информации о своём аккаунте
+
 – GET /users/users/my-reservations – получение информации о своих прошлых резервациях
 
 ## Тестирование
 
 pytest tests/ -v
+
 Покрывает ключевую логику: авторизация, права доступа, резервирование, аналитика
 
 ## Структура проекта
 
 boardgame-club/
+
 ├── app/
+
 │   ├── main.py
+
 │   ├── database.py
+
 │   ├── models.py
+
 │   ├── schemas.py
+
 │   ├── crud.py
+
 │   ├── auth.py
+
 │   ├── dependencies.py
+
 │   └── routers/
+
 ├── tests/
+
 ├── requirements.txt
+
 ├── pylint.txt
+
 ├── .pylintrc
+
 ├── README.md
+
 └── create_admin.py
 
-Бизнес-логика:
+## Бизнес-логика:
 
 – Один пользователь может иметь только одну резервацию
+
 – Автоматическое управление количеством доступных копий
+
 – Персональные рекомендации на основе истории резерваций
+
 – Рекомендации по закупке на основе спроса и наличия игр
 
 Автор: Ранье Даниил, группа М03-501
