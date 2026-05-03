@@ -134,3 +134,96 @@ def delete_game(db: Session, name: str):
     db.delete(game)
     db.commit()
     return {"detail": "Игра успешно удалена"}
+
+
+def get_user_reservation_stats(db: Session):
+    stats = db.query(
+        models.User.username,
+        models.User.full_name,
+        func.count(models.Reservation.id).label("total_res"),
+    ).join(models.Reservation, models.Reservation.user_id == models.User.id)\
+     .group_by(models.User.id)\
+     .having(func.count(models.Reservation.id) > 0)\
+     .order_by(func.count(models.Reservation.id).desc()).all()
+
+    result = []
+    for user in stats:
+        games = db.query(
+            models.BoardGame.name,
+            func.count(models.Reservation.id).label("count")
+        ).join(models.Reservation, models.Reservation.game_id == models.BoardGame.id)\
+         .filter(models.Reservation.user_id ==
+                 db.query(models.User.id).filter(models.User.username == user.username).scalar())\
+         .group_by(models.BoardGame.name)\
+         .all()
+
+        game_list = [{"game_name": g[0], "reservations_count": g[1]} for g in games]
+
+        result.append({
+            "username": user.username,
+            "full_name": user.full_name,
+            "total_reservations": user.total_res,
+            "games": game_list
+        })
+
+    return result
+
+
+def get_purchase_suggestions(db: Session, limit: int = 3):
+    suggestions = db.query(
+        models.BoardGame.id,
+        models.BoardGame.name,
+        func.count(models.Reservation.id).label("res_count"),
+        models.BoardGame.available_quantity,
+        (func.count(models.Reservation.id) / models.BoardGame.total_quantity).label("demand")
+    ).join(models.Reservation, models.Reservation.game_id == models.BoardGame.id, isouter=True)\
+     .group_by(models.BoardGame.id)\
+     .order_by(func.count(models.Reservation.id).desc(), models.BoardGame.available_quantity.asc())\
+     .limit(limit).all()
+
+    result = []
+    for s in suggestions:
+        result.append({
+            "game_id": s[0],
+            "name": s[1],
+            "reservations_count": s[2] or 0,
+            "available_quantity": s[3],
+            "demand_ratio": round(float(s[4] or 0), 2),
+            "recommendation": "Рекомендуется закупить" if (s[3] or 0) <= 1 and (s[2] or 0) > 5
+            else "Достаточное количество"
+        })
+    return result
+
+
+def get_user_recommendations(db: Session, user_id: int, limit: int = 5):
+    preferred_categories = db.query(models.BoardGame.category)\
+        .join(models.Reservation, models.Reservation.game_id == models.BoardGame.id)\
+        .filter(models.Reservation.user_id == user_id)\
+        .distinct().all()
+
+    if not preferred_categories:
+        return get_popular_games(db, limit)
+
+    recommendations = db.query(
+        models.BoardGame.id,
+        models.BoardGame.name,
+        models.BoardGame.category,
+        func.count(models.Reservation.id).label("popularity")
+    ).filter(
+        models.BoardGame.category.in_([cat[0] for cat in preferred_categories]),
+        ~models.BoardGame.id.in_(
+            db.query(models.Reservation.game_id).filter(models.Reservation.user_id == user_id)
+        )
+    ).outerjoin(models.Reservation, models.Reservation.game_id == models.BoardGame.id)\
+     .group_by(models.BoardGame.id)\
+     .order_by(func.count(models.Reservation.id).desc())\
+     .limit(limit).all()
+
+    return [
+        {
+            "game_id": r[0],
+            "name": r[1],
+            "category": r[2],
+            "reason": f"Популярная игра в категории {r[2]}, которую вы ещё не пробовали"
+        } for r in recommendations
+    ]

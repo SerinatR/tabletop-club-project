@@ -96,3 +96,30 @@ class PopularGame(BaseModel):
     name: str
     reservations_count: int
     demand_ratio: float  # reservations / total_quantity
+
+
+class UserReservationStats(BaseModel):
+    username: str
+    full_name: str
+    total_reservations: int
+    games: list[dict]   # список игр с количеством
+
+
+class UserReservationsAnalytics(BaseModel):
+    users: list[UserReservationStats]
+
+
+class PurchaseSuggestion(BaseModel):
+    game_id: int
+    name: str
+    reservations_count: int
+    available_quantity: int
+    demand_ratio: float
+    recommendation: str
+
+
+class GameRecommendation(BaseModel):
+    game_id: int
+    name: str
+    category: str
+    reason: str
